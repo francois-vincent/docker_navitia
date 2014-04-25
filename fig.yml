@@ -1,0 +1,12 @@
+web:
+    build: .
+    command: honcho start
+    links:
+     - db
+    ports:
+     - "5000:5000"
+    environment:
+     - PYTHONPATH=/kraken/source/jormungandr:/kraken/source/navitiacommon
+     - JORMUNGANDR_CONFIG_FILE=/kraken/source/jormungandr/jormungandr/default_settings.py 
+db:
+  image: blackhm/postgis

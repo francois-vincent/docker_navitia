@@ -1,4 +1,4 @@
 docker_kraken
 =============
 
-A docker configuration to run kraken (navitia)
+This is an early work to easily run navitia in a Docker container.

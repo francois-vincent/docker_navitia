@@ -1,4 +1,4 @@
 docker_kraken
 =============
 
-This is an early work to easily run navitia in a Docker container.
+This is an early work to easily run navitia in a Docker container. It's not working yet.

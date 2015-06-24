@@ -1,0 +1,8 @@
+*.py[cod]
+
+# IDEs
+.idea/
+
+# Working dirs
+data/
+zmq/

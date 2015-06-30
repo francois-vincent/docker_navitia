@@ -130,6 +130,7 @@ class TestDeploy(object):
             n.run('ps ax')
         elif nocreate:
             n.stop().start()
+            time.sleep(10)
             n.set_platform()
             n.execute('restart_all').run('service redis-server start', hosts=['kraken', 'jormun'], sudo=True)
             time.sleep(2)

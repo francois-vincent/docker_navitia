@@ -13,4 +13,4 @@ def simple(host):
 
     env.postgresql_database_host = 'localhost'
 
-    add_instance('paris', 'moovit_paris')
+    add_instance('default', 'default')

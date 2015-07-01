@@ -30,6 +30,7 @@ class TestDeploy(object):
 
     def check_tyr(self, out):
         # TODO remove postgresql
+        # TODO add wsgi
         assert '/usr/lib/erlang/erts-6.2/bin/epmd -daemon' in out
         assert '/bin/sh /usr/sbin/rabbitmq-server' in out
         assert '/usr/lib/erlang/erts-6.2/bin/beam.smp -W w -K true -A30 -P 1048576 -- -root ' \
@@ -111,11 +112,11 @@ class TestDeploy(object):
         n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get('http://%s/navitia' % n.inspect()).status_code == 200
-        n.run('chmod a+w /var/log/tyr/paris.log', sudo=True)
-        n.run('rm -f %s/paris/data.nav.lz4' % GUEST_DATA_FOLDER)
-        n.put(DATA_FILE, GUEST_DATA_FOLDER + '/paris', sudo=True)
+        n.run('chmod a+w /var/log/tyr/default.log', sudo=True)
+        n.run('rm -f %s/default/data.nav.lz4' % GUEST_DATA_FOLDER)
+        n.put(DATA_FILE, GUEST_DATA_FOLDER + '/default', sudo=True)
         time.sleep(30)
-        n.run('ls %s/paris' % GUEST_DATA_FOLDER)
+        n.run('ls %s/default' % GUEST_DATA_FOLDER)
         assert 'data.nav.lz4' in n.output
         if commit:
             n.commit()
@@ -127,27 +128,24 @@ class TestDeploy(object):
         if norestart:
             n.stop().start()
             n.set_platform()
-            n.run('ps ax')
         elif nocreate:
             n.stop().start()
             time.sleep(10)
             n.set_platform()
             n.execute('restart_all').run('service redis-server start', hosts=['kraken', 'jormun'], sudo=True)
             time.sleep(2)
-            n.run('ps ax')
         elif nobuild:
             n.stop().rm().up()
             n.set_platform()
             n.execute().run('service redis-server start', hosts=['kraken', 'jormun'], sudo=True)
             time.sleep(2)
-            n.run('ps ax')
         else:
             n.stop().rm().destroy()
             n.build()
             n.up().set_platform()
             n.execute().run('service redis-server start', hosts=['kraken', 'jormun'], sudo=True)
             time.sleep(2)
-            n.run('ps ax')
         print(n.get_host())
+        n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get('http://%s/navitia' % n.images['jormun'].inspect()).status_code == 200

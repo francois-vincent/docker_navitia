@@ -29,6 +29,7 @@ def env_common(tyr, ed, kraken, jormun):
 
     env.excluded_instances = []
     env.manual_package_deploy = True
+    env.setup_apache = True
 
     env.kraken_monitor_listen_port = 85
     env.jormungandr_save_stats = False
@@ -47,5 +48,4 @@ def env_common(tyr, ed, kraken, jormun):
     try:
         import custom
     except ImportError:
-        print("NOT FOUND")
         pass

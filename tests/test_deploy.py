@@ -62,7 +62,7 @@ class TestDeploy(object):
         assert '/usr/sbin/apache2 -k start' in out
         assert '/usr/bin/redis-server 127.0.0.1:6379' in out
         assert '(wsgi:monitor-kra -k start' in out
-        assert '/srv/kraken/paris/kraken' in out
+        assert '/srv/kraken/default/kraken' in out
 
     def check_processes(self, out):
         if isinstance(out, dict):

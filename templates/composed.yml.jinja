@@ -1,0 +1,29 @@
+{% for image in images %}
+{{ image.name }}:
+  image: {{ image.image }}
+  {% if image.links %}
+  links:
+   {% for li in image.links %}
+   - {{ li }}
+   {% endfor %}
+  {% endif %}
+  {% if image.ports %}
+  ports:
+   {% for port in image.ports %}
+   - "{{ port }}"
+   {% endfor %}
+  {% endif %}
+  {% if image.expose %}
+  expose:
+   {% for port in image.expose %}
+   - "{{ port }}"
+   {% endfor %}
+  {% endif %}
+  {% if image.volumes %}
+  volumes:
+   {% for volume in image.volumes %}
+   - {{ volume }}
+   {% endfor %}
+  {% endif %}
+
+{% endfor %}

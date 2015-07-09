@@ -2,7 +2,7 @@ FROM debian:8
 MAINTAINER François Vincent <francois.vincent@canaltp.fr>
 
 RUN echo "export CONTAINER=DOCKER" >> /etc/profile
-RUN echo "export PS1='\u@POSTGIS:\w$ '" >> /etc/profile
+RUN echo "export PS1='\u@DB:\w$ '" >> /etc/profile
 # hack to add loaclhost alias in /etc/hosts at startup
 # may be obsolete with docker-compose 1.3 [http://stackoverflow.com/questions/29076194/using-add-host-or-extra-hosts-with-docker-compose]
 RUN echo "grep -q -F '127.0.0.1    ed' /etc/hosts || echo '127.0.0.1    ed' | sudo tee -a /etc/hosts >/dev/null" >> /etc/profile

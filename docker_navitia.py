@@ -130,14 +130,22 @@ class DockerImageMixin(object):
     def get_host(self):
         return 'git@' + self.inspect()
 
+    def set_container(self):
+        container = find_container(container=self.container_name)
+        self.container = container['Id'] if container else None
+        return self
+
     def build(self):
-        print('Building %s from %s/Dockerfile' % (self.image_name, self.dockerpath))
+        print('Building {} from {}/Dockerfile'.format(self.image_name, self.dockerpath))
         wait(docker_client.build(path=self.dockerpath, tag=self.image_name, rm=True))
         return self
 
     def destroy(self):
-        print("Removing image '%s'" % self.image_name)
-        docker_client.remove_image(image=self.image_name)
+        print("Removing image '{}'".format(self.image_name))
+        try:
+            docker_client.remove_image(image=self.image_name)
+        except docker.errors.APIError:
+            print("  image not found")
         return self
 
     def create(self):
@@ -152,16 +160,25 @@ class DockerImageMixin(object):
         return self
 
     def start(self):
+        if not self.container:
+            self.set_container()
         docker_client.start(container=self.container)
+        self.set_platform()
         return self
 
     def stop(self):
-        docker_client.stop(container=self.container)
+        if not self.container:
+            self.set_container()
+        if self.container:
+            docker_client.stop(container=self.container)
+        else:
+            print("Container {} not found, stop skipped".format(self.container_name))
         return self
 
     def remove(self):
-        docker_client.remove_container(container=self.container)
-        self.container = None
+        if self.container:
+            docker_client.remove_container(container=self.container)
+            self.container = None
         return self
 
     def commit(self, repo=None):
@@ -183,15 +200,15 @@ class DockerImageMixin(object):
             operations.put(source, dest, use_sudo=sudo)
         return self
 
+    def clean_image(self):
+        self.run("apt-get clean && rm -rf /var/lib/apt/lists/* /var/tmp/*", sudo=True)
+        return self
+
 
 class FabricDeployMixin(object):
 
     def set_platform(self):
         module = import_module(resolve_module(self.platform, PLATFORMS))
-        # try:
-        #     module = import_module(resolve_module(self.platform, PLATFORMS_MODULE))
-        # except ImportError:
-        #     module = import_module(self.platform)
         api.env.distrib = self.distrib
         host_ref = self.get_host()
         if isinstance(host_ref, dict):
@@ -281,18 +298,18 @@ class BuildDockerCompose(FabricDeployMixin):
                                      'expose': expose, 'volumes': options.get('volumes')})
         return self
 
-    def set_containers(self):
+    def set_container(self):
         for img in self.images.itervalues():
             img.container = find_container(image=img.image_name)['Id']
         return self
 
-    def reset_containers(self):
+    def reset_container(self):
         for img in self.images.itervalues():
             img.container = None
         return self
 
     def get_host(self):
-        self.set_containers()
+        self.set_container()
         return dict((k, v.get_host()) for k, v in self.images.iteritems())
 
     def build(self):
@@ -328,7 +345,7 @@ class BuildDockerCompose(FabricDeployMixin):
         return self
 
     def up(self):
-        return self.create_yaml().compose_cmd('up -d').set_containers()
+        return self.create_yaml().compose_cmd('up -d').set_container()
 
     def start(self, compose=True):
         """
@@ -346,7 +363,7 @@ class BuildDockerCompose(FabricDeployMixin):
         return self.compose_cmd('stop')
 
     def rm(self):
-        return self.compose_cmd('rm -f').reset_containers()
+        return self.compose_cmd('rm -f').reset_container()
 
     def run(self, cmd, host=None, hosts=None, sudo=False):
         """

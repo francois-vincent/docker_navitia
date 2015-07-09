@@ -201,7 +201,7 @@ class DockerImageMixin(object):
         return self
 
     def clean_image(self):
-        self.run("apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*", sudo=True)
+        self.run("apt-get clean && rm -rf /var/lib/apt/lists/* /var/tmp/*", sudo=True)
         return self
 
 

@@ -4,10 +4,6 @@ MAINTAINER François Vincent <francois.vincent@canaltp.fr>
 RUN echo "export CONTAINER=DOCKER" >> /etc/profile
 RUN echo "export PS1='\u@NAVITIA:\w$ '" >> /etc/profile
 
-RUN useradd git && echo "git:git" | chpasswd && adduser git sudo
-RUN mkdir -p /home/git && chown -R git:git /home/git
-RUN sed -i 's/home\/git:\/bin\/sh/home\/git:\/bin\/bash/g' /etc/passwd
-
 # systemd is removed and sysvinit is installed instead.
 # As of may 2015, systemd is difficult to launch in a docker container, see http://developerblog.redhat.com/2014/05/05/running-systemd-within-docker-container/
 # and if systemd is installed, some packages try to launch via systemctl (eg PostgreSQL) and fail
@@ -18,8 +14,11 @@ RUN apt-get install -y  postgresql-server-dev-all postgis
 RUN apt-get install -y redis-server rabbitmq-server
 
 # change redis-server conf for not daemonize
-sed -i '/^daemonize yes/c\daemonize no' /tmp/foo
+RUN sed -i '/^daemonize yes/c\daemonize no' /etc/redis/redis.conf
 
+RUN useradd git && echo "git:git" | chpasswd && adduser git sudo
+RUN mkdir -p /home/git && chown -R git:git /home/git
+RUN sed -i 's/home\/git:\/bin\/sh/home\/git:\/bin\/bash/g' /etc/passwd
 RUN adduser git www-data
 RUN echo "git ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 

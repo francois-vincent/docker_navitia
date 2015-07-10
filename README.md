@@ -1,6 +1,9 @@
 # Navitia in Docker containers
 
-From [www.docker.com](https://www.docker.com/): Docker is an open platform for building, shipping and running distributed applications. It gives programmers, development teams and operations engineers the common toolbox they need to take advantage of the distributed and networked nature of modern applications. See also [docs.docker.com](https://docs.docker.com/). See [docs.docker.com/installation](https://docs.docker.com/installation/) for installation.
+From [www.docker.com](https://www.docker.com/): Docker is an open platform for building, shipping and running distributed
+applications. It gives programmers, development teams and operations engineers the common toolbox they need to take
+advantage of the distributed and networked nature of modern applications. See also [docs.docker.com](https://docs.docker.com/).
+See [docs.docker.com/installation](https://docs.docker.com/installation/) for installation.
 
 The purpose of this project is to create and manage Docker images/containers for Navitia2.
 What we have in mind is to have Navitia2 progressively deployed in a more simple and robust
@@ -27,9 +30,14 @@ There are currently 2 configurations of docker images:
 
 The build process is different in each case:
 
-For the simple case, we start from a target distribution image (e.g. Debian8), build an new image via a Dockerfile that declares ports and volumes, installs standard packages and configure them, then starts the services controller (currently supervisord) ; then start the fabric global deployment task on it. This results in a container with services and Navitia installed, configured and running. The final step is to stop this container and commit it, resulting in a new Docker image that can be deployed and run instantly anywhere.
+For the simple case, we start from a target distribution image (e.g. Debian8), build an new image via a Dockerfile that
+declares ports and volumes, installs standard packages and configure them, then starts the services controller
+(currently supervisord) ; then start the fabric global deployment task on it. This results in a container with services
+and Navitia installed, configured and running. The final step is to stop this container and commit it, resulting in a
+new Docker image that can be deployed and run instantly anywhere.
 
-For the composed case, the process is similar, except that the Docker process (build, create, start, ...) is supported by docker-compose, via the generation of a docker-compose.yml file.
+For the composed case, the process is similar, except that the Docker process (build, create, start, ...) is supported
+by docker-compose, via the generation of a docker-compose.yml file.
   
 Other configurations can be developed. This can be done by creating a new platform file, new Dockerfile 
 and supervisord.conf files, then instantiating a new BuildDockerCompose object with appropriate ports, 
@@ -44,7 +52,9 @@ The image for the component kraken on the composed platform will have name navit
 Containers names are in the form navitia_{platform}_[component]_[instance].
 
 For example, a container for the simple platform will bear name navitia_simple. 
-An image for the component kraken on the composed platform will have name navitia_composed_kraken. For future developments (see Limitations below), an additional instance field (with incremented integer values starting from 1) will be added.
+An image for the component kraken on the composed platform will have name navitia_composed_kraken.
+For future developments (see Limitations below), an additional instance field
+(with incremented integer values starting from 1) will be added.
 
 ## Building images
 We currently use pytest as a launcher, as the process of building images and testing them is identical.
@@ -66,4 +76,6 @@ You can dowload and run a docker image: `docker pull navitia/debian8_simple` the
 
 ## Limitations
 The current version of this project only allows for one instance of navitia2 (simple or composed) to run
-on a machine (real or virtual). This comes from the fact that some resources external to docker containers (such as containers names, ports, volumes) would conflict if duplicated. Future development will allow to run multiple instances on a single machine, a use case that can be useful for Jenkins machines for example.
+on a machine (real or virtual). This comes from the fact that some resources external to docker containers
+(such as containers names, ports, volumes) would conflict if duplicated. Future development will allow to run multiple
+instances on a single machine, a use case that can be useful for Jenkins machines for example.

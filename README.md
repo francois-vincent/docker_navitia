@@ -1,39 +1,69 @@
-docker_navitia
-=============
+# Navitia in Docker containers
 
-This project allows to create, manage and test Docker images/containers for Navitia2.
-The main idea is to manage independant docker images for the different components of Navitia.
-Each component's docker image being delivered synchronously with the delivery of Navitia's components.
+From [www.docker.com](https://www.docker.com/): Docker is an open platform for building, shipping and running distributed applications. It gives programmers, development teams and operations engineers the common toolbox they need to take advantage of the distributed and networked nature of modern applications. See also [docs.docker.com](https://docs.docker.com/). See [docs.docker.com/installation](https://docs.docker.com/installation/) for installation.
 
-The purppose of this project is to have Navitia2 progressively deployed in a more simple and robust
+The purpose of this project is to create and manage Docker images/containers for Navitia2.
+What we have in mind is to have Navitia2 progressively deployed in a more simple and robust
 way, and on any kind of platform, offering:
 - Easy and fast deployment on a development platform,
 - Running of complete or partial test scenarios on a development platform or on any dedicated platform,
-  giving developpers unprecedented flexibility to run customized tests more efficiently,
+  giving developers unprecedented flexibility to run customized tests more efficiently,
 - More easy and robust deployment on staging or production platforms, especially for customers running
   their own platforms, but also for partners seeking unmanaged self deployment,
-- Build automation of platforms (see Creation below) that create  
+- Build automation of customized platforms (see Creation below) for creation and test of specialized versions of Navitia.
   
 Docker images are architectured in a way such that updating Navitia to the latest version is as simple
 as replacing old images with new ones and restarting them.
-For this to be possible, all data are kept in folder external to docker containers but accessed
-via folder bindings (known to docker as 'volumes')
+For this to be possible, all data must be kept in folder external to docker containers, accessed
+via folder bindings (known to docker as 'volumes'). This feature is still under active development.
 
-# Creation
+## Description
 Navitia in docker containers can follow different configurations (named platforms in docker_navitia source).
 There are currently 2 configurations of docker images:
-- monolythic: all components and services are in a single image. This simple configuration is
+- simple: all components and services are in a single image. This simple configuration is
   ideal for development and tests purposes.
-- composed: each component fits in an image. There are 4 components (Ed, Tyr, Engine, WS),
+- composed: each component fits in an image. There are 4 components (DB, Tyr, Engine, WS),
   each corresponding to an image.
+
+The build process is different in each case:
+
+For the simple case, we start from a target distribution image (e.g. Debian8), build an new image via a Dockerfile that declares ports and volumes, installs standard packages and configure them, then starts the services controller (currently supervisord) ; then start the fabric global deployment task on it. This results in a container with services and Navitia installed, configured and running. The final step is to stop this container and commit it, resulting in a new Docker image that can be deployed and run instantly anywhere.
+
+For the composed case, the process is similar, except that the Docker process (build, create, start, ...) is supported by docker-compose, via the generation of a docker-compose.yml file.
   
 Other configurations can be developed. This can be done by creating a new platform file, new Dockerfile 
-and supervisord.conf files, then instanciating a new BuildDockerCompose object with apropriate ports, 
+and supervisord.conf files, then instantiating a new BuildDockerCompose object with appropriate ports, 
 volumes and links before launching build process then python-fabric installation process.
    
-# TODO naming, images vs containers
+## Naming images and containers
+Images names are in the form: navitia/{distrib}_{platform}_[component].
 
-# Limitations
-The current version of this project only allows for one instance of navitia2 (simle or composed) to run
-on a machine (real or virtual). Future development will allow to run multiple instances on a single machine,
-a use case that can be useful for Jenkins for example.
+For example, the image for the simple platform based on debian8 will bear name navitia/debian8_simple. 
+The image for the component kraken on the composed platform will have name navitia/debian8_composed_kraken.
+
+Containers names are in the form navitia_{platform}_[component]_[instance].
+
+For example, a container for the simple platform will bear name navitia_simple. 
+An image for the component kraken on the composed platform will have name navitia_composed_kraken. For future developments (see Limitations below), an additional instance field (with incremented integer values starting from 1) will be added.
+
+## Building images
+We currently use pytest as a launcher, as the process of building images and testing them is identical.
+To build and test a simple container, cd to docker_navitia, then run:
+`py.test -s -k test_deploy_simple`
+
+Once built, it can be simply restarted and tested via:
+`py.test -s -k test_deploy_simple --nobuild`
+
+Then, the resulting Docker image can be created via:
+`py.test -s -k test_deploy_simple --commit`
+
+A similar process is available for the composed platform, simply replace *test_deploy_simple* with *test_deploy_composed*.
+
+## Play with Navitia images
+You can check existing Navitia images on docker hub, type `docker search navitia`.
+
+You can dowload and run a docker image: `docker pull navitia/debian8_simple` then `docker run navitia/debian8_simple`.
+
+## Limitations
+The current version of this project only allows for one instance of navitia2 (simple or composed) to run
+on a machine (real or virtual). This comes from the fact that some resources external to docker containers (such as containers names, ports, volumes) would conflict if duplicated. Future development will allow to run multiple instances on a single machine, a use case that can be useful for Jenkins machines for example.

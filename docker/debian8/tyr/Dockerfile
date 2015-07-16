@@ -10,10 +10,6 @@ RUN echo "export PS1='\u@$DOCKER_IMAGE:\w$ '" >> /etc/profile
 # may be obsolete with docker-compose 1.3 [http://stackoverflow.com/questions/29076194/using-add-host-or-extra-hosts-with-docker-compose]
 RUN echo "grep -q -F '127.0.0.1    tyr' /etc/hosts || echo '127.0.0.1    tyr' | sudo tee -a /etc/hosts >/dev/null" >> /etc/profile
 
-RUN useradd git && echo "git:git" | chpasswd && adduser git sudo
-RUN mkdir -p /home/git && chown -R git:git /home/git
-RUN sed -i 's/home\/git:\/bin\/sh/home\/git:\/bin\/bash/g' /etc/passwd
-
 # systemd is removed and sysvinit is installed instead.
 # As of may 2015, systemd is difficult to launch in a docker container, see http://developerblog.redhat.com/2014/05/05/running-systemd-within-docker-container/
 # and if systemd is installed, some packages try to launch via systemctl (eg PostgreSQL) and fail
@@ -21,6 +17,8 @@ RUN apt-get update && apt-get install -y sysvinit-core python openssh-server sud
 RUN apt-get remove -y systemd
 RUN apt-get install -y rabbitmq-server redis-server
 
+RUN useradd -m -s /usr/bash git && echo "git:git" | chpasswd
+RUN adduser git sudo && adduser git www-data
 RUN echo "git ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # allow user 'guest' from remote hosts

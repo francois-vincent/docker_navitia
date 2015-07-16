@@ -16,10 +16,8 @@ RUN apt-get install -y redis-server rabbitmq-server
 # change redis-server conf for not daemonize
 RUN sed -i '/^daemonize yes/c\daemonize no' /etc/redis/redis.conf
 
-RUN useradd git && echo "git:git" | chpasswd && adduser git sudo
-RUN mkdir -p /home/git && chown -R git:git /home/git
-RUN sed -i 's/home\/git:\/bin\/sh/home\/git:\/bin\/bash/g' /etc/passwd
-RUN adduser git www-data
+RUN useradd -m -s /usr/bash git && echo "git:git" | chpasswd
+RUN adduser git sudo && adduser git www-data
 RUN echo "git ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 RUN mkdir /var/run/sshd

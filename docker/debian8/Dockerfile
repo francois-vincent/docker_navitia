@@ -1,5 +1,4 @@
 FROM debian:8
-MAINTAINER François Vincent <francois.vincent@canaltp.fr>
 
 RUN echo "export CONTAINER=DOCKER" >> /etc/profile
 RUN echo "export PS1='\u@NAVITIA:\w$ '" >> /etc/profile

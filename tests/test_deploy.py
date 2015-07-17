@@ -193,16 +193,21 @@ class TestDeploy(object):
         self.check_processes(n.output)
         assert requests.get('http://%s/navitia' % n.images['jormun'].inspect()).status_code == 200
 
-    def test_deploy_simple(self, nobuild, commit):
-        n = BuildDockerSimple(volumes=[HOST_DATA_FOLDER + ':' + GUEST_DATA_FOLDER],
-                              ports=['8080:80'])
+    def test_deploy_simple(self, nobuild, nocreate, commit):
+        n = self.deploy_simple()
         if commit:
             print('Commiting image')
             n.start().clean_image().stop().commit()
             return
-        elif nobuild:
-            print('Startting image, no build')
+        elif nocreate:
+            print('Starting image, no create')
             n.stop().start()
+        elif nobuild:
+            print('Creating image, no build')
+            n.stop().start()
+            time.sleep(3)
+            n.execute()
+            n.run('chmod a+w /var/log/tyr/default.log', sudo=True)
         else:
             print('Building image')
             n.stop().remove().destroy()

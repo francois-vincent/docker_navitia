@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y sysvinit-core python openssh-server sud
 RUN apt-get remove -y systemd
 RUN apt-get install -y libpq-dev apache2 libapache2-mod-wsgi redis-server
 
-RUN useradd -m -s /usr/bash git && echo "git:git" | chpasswd
+RUN useradd -m -s /bin/bash git && echo "git:git" | chpasswd
 RUN adduser git sudo && adduser git www-data
 RUN echo "git ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 

@@ -214,7 +214,7 @@ class TestDeploy(object):
             n.build().create().start()
             time.sleep(3)
             n.execute()
-            n.run('chmod a+w /var/log/tyr/default.log', sudo=True)
+            n.run('chmod a+wr /var/log/tyr/default.log', sudo=True)
         print(n.get_host())
         # we have to wait a while for tyr_beat to establish the connection
         # to the jormungandr db

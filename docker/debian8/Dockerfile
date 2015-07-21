@@ -15,18 +15,18 @@ RUN apt-get install -y redis-server rabbitmq-server
 # change redis-server conf for not daemonize (for supervisord)
 RUN sed -i '/^daemonize yes/c\daemonize no' /etc/redis/redis.conf
 
-# add user git, as a sudoer (for later tests and debug)
-RUN useradd -m -s /bin/bash git && echo "git:git" | chpasswd
-RUN adduser git sudo && adduser git www-data
-RUN echo "git ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# add user navitia, as a sudoer (for later tests and debug)
+RUN useradd -m -s /bin/bash navitia && echo "navitia:navitia" | chpasswd
+RUN adduser navitia sudo && adduser navitia www-data
+RUN echo "navitia ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # configure SSH server
 RUN mkdir /var/run/sshd
-RUN mkdir -p /home/git/.ssh
+RUN mkdir -p /home/navitia/.ssh
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-COPY unsecure_key.pub /home/git/.ssh/authorized_keys
-RUN chmod 644 /home/git/.ssh/authorized_keys
+COPY unsecure_key.pub /home/navitia/.ssh/authorized_keys
+RUN chmod 644 /home/navitia/.ssh/authorized_keys
 
 # set locale to French
 RUN sed -i "/^# fr_FR.UTF-8 UTF-8/c\fr_FR.UTF-8 UTF-8" /etc/locale.gen

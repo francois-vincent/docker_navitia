@@ -82,6 +82,7 @@ class DockerImageMixin(object):
 
     def process_options(self, **options):
         kwargs = {}
+        self.user = options.get('user', 'navitia')
         volumes = options.get('volumes')
         self.volumes = []
         if volumes:
@@ -128,7 +129,7 @@ class DockerImageMixin(object):
         return config
 
     def get_host(self):
-        return 'git@' + self.inspect()
+        return self.user + '@' + self.inspect()
 
     def set_container(self):
         container = find_container(container=self.container_name)

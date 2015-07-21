@@ -196,7 +196,7 @@ class TestDeploy(object):
     def test_deploy_simple(self, nobuild, nocreate, commit):
         n = self.deploy_simple()
         if commit:
-            print('Commiting image')
+            print('Committing image')
             n.start().clean_image().stop().commit()
             return
         elif nocreate:

@@ -1,7 +1,6 @@
 FROM debian:8
 
 RUN echo "export CONTAINER=DOCKER" >> /etc/profile
-RUN echo "export PS1='\u@NAVITIA:\w$ '" >> /etc/profile
 
 # systemd is removed and sysvinit is installed instead.
 # As of may 2015, systemd is difficult to launch in a docker container, see http://developerblog.redhat.com/2014/05/05/running-systemd-within-docker-container/
@@ -19,6 +18,7 @@ RUN sed -i '/^daemonize yes/c\daemonize no' /etc/redis/redis.conf
 RUN useradd -m -s /bin/bash navitia && echo "navitia:navitia" | chpasswd
 RUN adduser navitia sudo && adduser navitia www-data
 RUN echo "navitia ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN echo "export PS1='\u@NAVITIA:\w$ '" >> /home/navitia/.bashrc
 
 # configure SSH server
 RUN mkdir /var/run/sshd
@@ -32,6 +32,7 @@ RUN chmod 644 /home/navitia/.ssh/authorized_keys
 RUN sed -i "/^# fr_FR.UTF-8 UTF-8/c\fr_FR.UTF-8 UTF-8" /etc/locale.gen
 RUN locale-gen fr_FR.UTF-8
 
+# set basic Apache config
 RUN mkdir /etc/apache2/conf.d
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN echo "Include conf.d/" >> /etc/apache2/apache2.conf

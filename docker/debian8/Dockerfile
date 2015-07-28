@@ -1,5 +1,14 @@
 FROM debian:8
 
+# ports
+EXPOSE 22 80 85
+
+# mapped volumes
+ENV DATA_VOLUME /srv/ed/data
+RUN mkdir -m 777 -p $DATA_VOLUME
+RUN touch $DATA_VOLUME/placeholder
+VOLUME ["$DATA_VOLUME"]
+
 RUN echo "export CONTAINER=DOCKER" >> /etc/profile
 
 # systemd is removed and sysvinit is installed instead.
@@ -36,14 +45,6 @@ RUN locale-gen fr_FR.UTF-8
 RUN mkdir /etc/apache2/conf.d
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN echo "Include conf.d/" >> /etc/apache2/apache2.conf
-
-# ports
-EXPOSE 22 80 85
-
-# volumes
-ENV DATA_VOLUME /srv/ed/data
-VOLUME ["$DATA_VOLUME"]
-RUN chmod a+rw $DATA_VOLUME
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 

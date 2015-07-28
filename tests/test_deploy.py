@@ -193,7 +193,7 @@ class TestDeploy(object):
         self.check_processes(n.output)
         assert requests.get('http://%s/navitia' % n.images['jormun'].inspect()).status_code == 200
 
-    def test_deploy_simple(self, nobuild, nocreate, commit):
+    def test_deploy_simple(self, nobuild, nofabric, nocreate, commit):
         n = self.deploy_simple()
         if commit:
             print('Committing image')
@@ -202,19 +202,21 @@ class TestDeploy(object):
         elif nocreate:
             print('Starting image, no create')
             n.stop().start()
+        elif nofabric:
+            print('Creating container, no build')
+            # n.image_name += '_simple'
+            n.stop().remove().create().start()
         elif nobuild:
-            print('Creating image, no build')
+            print('Creating image via fabric, no build')
             n.stop().start()
             time.sleep(3)
             n.execute()
-            n.run('chmod a+w /var/log/tyr/default.log', sudo=True)
+            n.run('chmod a+wr /var/log/tyr/default.log', sudo=True)
         else:
             print('Building image')
             n.stop().remove().destroy()
-            n.build().create().start()
-            time.sleep(3)
-            n.execute()
-            n.run('chmod a+wr /var/log/tyr/default.log', sudo=True)
+            n.build()
+            return
         print(n.get_host())
         # we have to wait a while for tyr_beat to establish the connection
         # to the jormungandr db
@@ -222,3 +224,6 @@ class TestDeploy(object):
         n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get('http://localhost:8080/navitia').status_code == 200
+
+    def test_start_simple(self):
+        n = self.deploy_simple()

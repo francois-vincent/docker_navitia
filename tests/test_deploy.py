@@ -206,6 +206,7 @@ class TestDeploy(object):
             print('Creating container, no build')
             # n.image_name += '_simple'
             n.stop().remove().create().start()
+            return
         elif nobuild:
             print('Creating image via fabric, no build')
             n.stop().start()
@@ -224,6 +225,3 @@ class TestDeploy(object):
         n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get('http://localhost:8080/navitia').status_code == 200
-
-    def test_start_simple(self):
-        n = self.deploy_simple()

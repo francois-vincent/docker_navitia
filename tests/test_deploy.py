@@ -87,6 +87,8 @@ class TestDeploy(object):
     def check_db(self, out, launch=False):
         host = api.env.roledefs['db'][0]
         split_out = out.split(r'\n')
+        for x in split_out:
+            print(x)
         test_and_launch(split_out, '/usr/lib/postgresql/9.4/bin/postgres -D /var/lib/postgresql/9.4/main -c '
                              'config_file=/etc/postgresql/9.4/main/postgresql.conf',
                         host, launch and 'postgresql')
@@ -231,7 +233,7 @@ class TestDeploy(object):
         n = self.deploy_simple()
         n.image_name += '_simple'
         n.stop().remove().create().start()
-        time.sleep(120)
+        time.sleep(180)
         n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get(NAVITIA_URL).status_code == 200

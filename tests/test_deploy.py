@@ -232,3 +232,9 @@ class TestDeploy(object):
         n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get('http://localhost:8080/navitia').status_code == 200
+        n.execute('restart_all')
+        time.sleep(60)
+        n.run('ps ax')
+        self.check_processes(n.output)
+        assert requests.get('http://localhost:8080/navitia').status_code == 200
+        n.stop()

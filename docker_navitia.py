@@ -157,7 +157,11 @@ class DockerImageMixin(object):
                 kwargs['ports'] = self.ports
             if self.volumes:
                 kwargs['volumes'] = self.volumes
-        self.container = docker_client.create_container(**kwargs).get('Id')
+        try:
+            self.container = docker_client.create_container(**kwargs).get('Id')
+        except docker.errors.APIError:
+            docker_client.pull(self.image_name)
+            self.container = docker_client.create_container(**kwargs).get('Id')
         return self
 
     def start(self):

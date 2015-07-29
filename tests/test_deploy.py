@@ -20,6 +20,8 @@ GUEST_DATA_FOLDER = '/srv/ed/data'
 HOST_ZMQ_FOLDER = os.path.join(ROOT, 'zmq')
 GUEST_ZMQ_FOLDER = api.env.kraken_basedir
 DATA_FILE = os.path.join(ROOT, 'fixtures/data.zip')
+MAPPED_HTTP_PORT = 8082
+NAVITIA_URL = 'http://localhost:{}/navitia'.format(MAPPED_HTTP_PORT)
 
 if not os.path.isdir(HOST_DATA_FOLDER):
     os.mkdir(HOST_DATA_FOLDER)
@@ -117,7 +119,7 @@ class TestDeploy(object):
 
     def deploy_simple(self):
         return BuildDockerSimple(volumes=[HOST_DATA_FOLDER + ':' + GUEST_DATA_FOLDER],
-                                 ports=['8080:80'])
+                                 ports=['{}:80'.format(MAPPED_HTTP_PORT)])
 
     def deploy_composed(self):
         return BuildDockerCompose(). \
@@ -125,7 +127,8 @@ class TestDeploy(object):
             add_image('tyr', links=['ed'], ports=[5672], volumes=[HOST_DATA_FOLDER + ':' + GUEST_DATA_FOLDER]). \
             add_image('kraken', links=['tyr', 'ed'],
                       volumes=[HOST_DATA_FOLDER + ':' + GUEST_DATA_FOLDER, HOST_ZMQ_FOLDER + ':' + GUEST_ZMQ_FOLDER]). \
-            add_image('jormun', links=['ed'], ports=['8082:80'], volumes=[HOST_ZMQ_FOLDER + ':' + GUEST_ZMQ_FOLDER])
+            add_image('jormun', links=['ed'], ports=['{}:80'.format(MAPPED_HTTP_PORT)],
+                      volumes=[HOST_ZMQ_FOLDER + ':' + GUEST_ZMQ_FOLDER])
 
     def test_deploy_old(self, commit):
         # deprecated
@@ -147,7 +150,7 @@ class TestDeploy(object):
         n.run('id')
         assert 'uid=1000(git) gid=1000(git) groups=1000(git),27(sudo),33(www-data)' in n.output
         assert requests.get('http://%s/navitia' % n.inspect()).status_code == 200
-        assert requests.get('http://localhost:8080/navitia').status_code == 200
+        assert requests.get('http://localhost:{}/navitia').status_code == 200
         n.stop().start().set_platform().execute('restart_all')
         n.run('ps ax')
         self.check_processes(n.output)
@@ -222,7 +225,7 @@ class TestDeploy(object):
         time.sleep(60)
         n.run('ps ax')
         self.check_processes(n.output)
-        assert requests.get('http://localhost:8080/navitia').status_code == 200
+        assert requests.get(NAVITIA_URL).status_code == 200
 
     def test_run_simple(self):
         n = self.deploy_simple()
@@ -231,10 +234,10 @@ class TestDeploy(object):
         time.sleep(60)
         n.run('ps ax')
         self.check_processes(n.output)
-        assert requests.get('http://localhost:8080/navitia').status_code == 200
+        assert requests.get(NAVITIA_URL).status_code == 200
         n.execute('restart_all')
         time.sleep(60)
         n.run('ps ax')
         self.check_processes(n.output)
-        assert requests.get('http://localhost:8080/navitia').status_code == 200
+        assert requests.get(NAVITIA_URL).status_code == 200
         n.stop()

@@ -19,12 +19,10 @@ def env_common(tyr, ed, kraken, jormun):
 
     env.roledefs = {
         'tyr':  [tyr],
-        'tyr1': [tyr],
+        'tyr_master': [tyr],
         'db':   [ed],
         'eng':  [kraken],
-        'eng1': [kraken],
         'ws':   [jormun],
-        'ws1':  [jormun],
     }
 
     env.excluded_instances = []

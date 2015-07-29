@@ -1,8 +1,7 @@
 # encoding: utf-8
 
-# Usage   : "py.test -s tests [-k test_case] [--nobuild] [--commit]" from within folder fabric_navitia
+# Usage   : "py.test -s tests [-k test_case] [--option]" from within folder fabric_navitia
 # Example : py.test -s -k test_deploy_two --commit
-# you need to have your ssh's id_rsa.pub file in the same folder as the Dockerfile you use
 
 from __future__ import unicode_literals, print_function
 import os
@@ -10,8 +9,10 @@ import sys
 import requests
 import time
 # sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..')))
+print(sys.path)
 sys.path[0] = os.path.abspath(os.path.join(__file__, '..', '..'))
-
+print(sys.path)
+sys.exit(0)
 from fabric import api, context_managers
 
 from docker_navitia.docker_navitia import ROOT, BuildDockerSimple, BuildDockerCompose, find_image, find_container

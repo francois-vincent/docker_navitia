@@ -8,9 +8,8 @@ import os
 import sys
 import requests
 import time
-# sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..')))
 print(sys.path)
-sys.path[0] = os.path.abspath(os.path.join(__file__, '..', '..'))
+sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..')))
 print(sys.path)
 sys.exit(0)
 from fabric import api, context_managers

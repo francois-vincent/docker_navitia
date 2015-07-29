@@ -231,7 +231,7 @@ class TestDeploy(object):
         n = self.deploy_simple()
         n.image_name += '_simple'
         n.stop().remove().create().start()
-        time.sleep(60)
+        time.sleep(120)
         n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get(NAVITIA_URL).status_code == 200

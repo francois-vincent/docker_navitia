@@ -223,3 +223,12 @@ class TestDeploy(object):
         n.run('ps ax')
         self.check_processes(n.output)
         assert requests.get('http://localhost:8080/navitia').status_code == 200
+
+    def test_run_simple(self):
+        n = self.deploy_simple()
+        n.image_name += '_simple'
+        n.stop().remove().create().start()
+        time.sleep(60)
+        n.run('ps ax')
+        self.check_processes(n.output)
+        assert requests.get('http://localhost:8080/navitia').status_code == 200

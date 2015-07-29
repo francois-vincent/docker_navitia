@@ -8,9 +8,8 @@ import os
 import sys
 import requests
 import time
-print(sys.path)
 sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..')))
-print(sys.path)
+
 from fabric import api, context_managers
 
 from docker_navitia.docker_navitia import ROOT, BuildDockerSimple, BuildDockerCompose, find_image, find_container

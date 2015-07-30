@@ -11,7 +11,7 @@ import docker
 from fabric import api, context_managers, operations
 
 # generally, fabric-navitia is a brother folder, if not, set environment variable PYTHONPATH
-sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..', 'fabric-navitia')))
+sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..', 'fabric_navitia')))
 from fabfile import tasks, component
 
 ROOT = os.path.dirname(os.path.abspath(__file__))

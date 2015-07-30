@@ -259,6 +259,7 @@ class TestDeploy(object):
         time.sleep(3)
         n.execute()
         n.run('chmod a+wr /var/log/tyr/default.log', sudo=True)
+        n.run('chmod -R a+w {}'.format(GUEST_DATA_FOLDER), sudo=True)
         time.sleep(60)
         n.run('ps ax')
         for x in split_output(n.output):

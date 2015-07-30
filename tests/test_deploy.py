@@ -27,25 +27,30 @@ if not os.path.isdir(HOST_DATA_FOLDER):
     os.mkdir(HOST_DATA_FOLDER)
 
 
+def split_output(out):
+    return out.split(r'\n' if r'\n' in out else '\n')
+
+
 def check_contains(out, elements):
     """ Checks that all strings of elements are found in the same item of out
     :param out: list of strings
     :param elements: string or list of string
     :return: True if found
     """
+    out = split_output(out)
     if isinstance(elements, basestring):
         head = elements
-        elements = [elements]
+        tail = []
     else:
         head = elements[0]
-    tail = elements[1:]
+        tail = elements[1:]
     for o in out:
         if head in o:
             if all(e in o for e in tail):
                 return True
 
 
-def test_and_launch(ps_out, required, host, service=None, delay=30, retry=2):
+def test_and_launch(ps_out, required, host=None, service=None, delay=30, retry=2):
     # TODO refactor to overcome the SSH problem with respect to "service start"
     # see: https://github.com/fabric/fabric/issues/395
     if check_contains(ps_out, required):
@@ -64,13 +69,12 @@ class TestDeploy(object):
         # TODO remove postgresql
         # TODO add wsgi
         host = api.env.roledefs['tyr'][0]
-        split_out = out.split(r'\n')
-        test_and_launch(split_out, '/usr/bin/redis-server 127.0.0.1:6379', host, launch and 'redis-server')
-        test_and_launch(split_out, '/bin/sh /usr/sbin/rabbitmq-server', host, launch and 'rabbitmq-server')
-        test_and_launch(split_out, ['/usr/bin/python', 'celery', 'worker',
+        test_and_launch(out, '/usr/bin/redis-server 127.0.0.1:6379', host, launch and 'redis-server')
+        test_and_launch(out, '/bin/sh /usr/sbin/rabbitmq-server', host, launch and 'rabbitmq-server')
+        test_and_launch(out, ['/usr/bin/python', 'celery', 'worker',
                               '-A tyr.tasks --events --pidfile=/tmp/tyr_worker.pid'],
                         host, launch and 'tyr_worker', retry=2)
-        test_and_launch(split_out, ['/usr/bin/python', 'celery', 'beat', '-A tyr.tasks',
+        test_and_launch(out, ['/usr/bin/python', 'celery', 'beat', '-A tyr.tasks',
                               '--gid=www-data', '--pidfile=/tmp/tyr_beat.pid'],
                         host, launch and 'tyr_beat')
         assert '/usr/lib/erlang/erts-6.2/bin/beam.smp' in out
@@ -79,17 +83,13 @@ class TestDeploy(object):
 
     def check_jormun(self, out, launch=False):
         host = api.env.roledefs['ws'][0]
-        split_out = out.split(r'\n')
-        test_and_launch(split_out, '/usr/bin/redis-server 127.0.0.1:6379', host, launch and 'redis-server')
-        test_and_launch(split_out, '/usr/sbin/apache2 -k start', host, launch and 'apache2')
+        test_and_launch(out, '/usr/bin/redis-server 127.0.0.1:6379', host, launch and 'redis-server')
+        test_and_launch(out, '/usr/sbin/apache2 -k start', host, launch and 'apache2')
         assert '(wsgi:jormungandr -k start' in out
 
     def check_db(self, out, launch=False):
         host = api.env.roledefs['db'][0]
-        split_out = out.split(r'\n')
-        for x in split_out:
-            print(x, len(x))
-        test_and_launch(split_out, '/usr/lib/postgresql/9.4/bin/postgres -D /var/lib/postgresql/9.4/main -c '
+        test_and_launch(out, '/usr/lib/postgresql/9.4/bin/postgres -D /var/lib/postgresql/9.4/main -c '
                              'config_file=/etc/postgresql/9.4/main/postgresql.conf',
                         host, launch and 'postgresql')
         assert 'postgres: checkpointer process' in out
@@ -101,10 +101,9 @@ class TestDeploy(object):
 
     def check_kraken(self, out, launch=False):
         host = api.env.roledefs['eng'][0]
-        split_out = out.split(r'\n')
-        test_and_launch(split_out, '/usr/bin/redis-server 127.0.0.1:6379', host, launch and 'redis-server')
-        test_and_launch(split_out, '/usr/sbin/apache2 -k start', host, launch and 'apache2')
-        test_and_launch(split_out, '/srv/kraken/default/kraken', host, launch and 'kraken_default')
+        test_and_launch(out, '/usr/bin/redis-server 127.0.0.1:6379', host, launch and 'redis-server')
+        test_and_launch(out, '/usr/sbin/apache2 -k start', host, launch and 'apache2')
+        test_and_launch(out, '/srv/kraken/default/kraken', host, launch and 'kraken_default')
         assert '(wsgi:monitor-kra -k start' in out
 
     def check_processes(self, out, launch=False):
@@ -118,6 +117,29 @@ class TestDeploy(object):
             self.check_tyr(out, launch)
             self.check_kraken(out, launch)
             self.check_jormun(out, launch)
+
+    def check_processes_lite(self, out):
+        """ Use this to check processes on Jenkins because output is truncated
+        """
+        test_and_launch(out, '/usr/lib/postgresql/9.4/bin/postgres -D')
+        test_and_launch(out, '/usr/bin/redis-server 127.0.0.1:6379')
+        test_and_launch(out, '/bin/sh /usr/sbin/rabbitmq-server')
+        test_and_launch(out, '/usr/sbin/apache2 -k start -DFOREGROUND')
+        test_and_launch(out, '/srv/kraken/default/kraken')
+        test_and_launch(out, ['/usr/bin/python', 'celery', '-A tyr.tasks'])
+        test_and_launch(out, 'sh -c /usr/lib/rabbitmq/bin/rabbitmq-server')
+        test_and_launch(out, '/usr/lib/erlang/erts-6.2/bin/beam.smp -W w -K true -A')
+        test_and_launch(out, '(wsgi:jormungandr -k start -DFOREGROUND')
+        test_and_launch(out, '(wsgi:monitor-kra -k start -DFOREGROUND')
+        test_and_launch(out, '/usr/sbin/apache2 -k start -DFOREGROUND')
+        test_and_launch(out, '/usr/lib/erlang/erts-6.2/bin/epmd -daemon')
+        test_and_launch(out, 'inet_gethost 4')
+        test_and_launch(out, 'postgres: checkpointer process')
+        test_and_launch(out, 'postgres: writer process')
+        test_and_launch(out, 'postgres: wal writer process')
+        test_and_launch(out, 'postgres: autovacuum launcher process')
+        test_and_launch(out, 'postgres: stats collector process')
+        test_and_launch(out, 'postgres: jormungandr jormungandr')
 
     def deploy_simple(self):
         return BuildDockerSimple(volumes=[HOST_DATA_FOLDER + ':' + GUEST_DATA_FOLDER],
@@ -231,15 +253,15 @@ class TestDeploy(object):
 
     def test_run_simple(self):
         n = self.deploy_simple()
-        n.image_name += '_simple'
+        # suppose base image (navitia/debian8) is already built
         n.stop().remove().create().start()
+        time.sleep(3)
+        n.execute()
+        n.run('chmod a+wr /var/log/tyr/default.log', sudo=True)
         time.sleep(60)
         n.run('ps ax')
-        self.check_processes(n.output)
-        assert requests.get(NAVITIA_URL).status_code == 200
-        n.execute('restart_all')
-        time.sleep(60)
-        n.run('ps ax')
-        self.check_processes(n.output)
+        for x in split_output(n.output):
+            print(x)
+        self.check_processes_lite(n.output)
         assert requests.get(NAVITIA_URL).status_code == 200
         n.stop()

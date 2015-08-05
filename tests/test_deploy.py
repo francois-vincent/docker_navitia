@@ -277,6 +277,6 @@ class TestDeploy(object):
         n.stop().start()
         time.sleep(3)
         try:
-            n.execute('component.kraken.test_these_krakens:{}'.format(n.get_host().replace('navitia@', '')))
+            n.execute('component.kraken.test_these_krakens:{}'.format(n.get_host()))
         finally:
             n.stop()

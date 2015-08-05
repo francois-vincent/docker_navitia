@@ -223,6 +223,7 @@ class TestDeploy(object):
         n = self.deploy_simple()
         if commit:
             print('Committing image')
+            n.destroy(n.image_name + '_' + n.short_container_name)
             n.start().clean_image().stop().commit()
             return
         elif nocreate:
@@ -257,7 +258,10 @@ class TestDeploy(object):
         # suppose base image (navitia/debian8) is already built
         n.stop().remove().create().start()
         time.sleep(3)
-        n.execute()
+        try:
+            n.execute()
+        except:
+            n.stop()
         n.run('chmod a+wr /var/log/tyr/default.log', sudo=True)
         n.run('chmod -R a+w {}'.format(GUEST_DATA_FOLDER), sudo=True)
         time.sleep(60)
@@ -267,3 +271,12 @@ class TestDeploy(object):
         self.check_processes_lite(n.output)
         assert requests.get(NAVITIA_URL).status_code == 200
         n.stop()
+
+    def test_custom(self):
+        n = self.deploy_simple()
+        n.stop().start()
+        time.sleep(3)
+        try:
+            n.execute('component.kraken.test_all_krakens')
+        finally:
+            n.stop()

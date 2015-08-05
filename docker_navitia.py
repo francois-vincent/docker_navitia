@@ -8,11 +8,11 @@ import shutil
 import sys
 
 import docker
-from fabric import api, context_managers, operations
+from fabric import api, context_managers, operations, tasks
 
 # generally, fabric-navitia is a brother folder, if not, set environment variable PYTHONPATH
 sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..', 'fabric_navitia')))
-from fabfile import tasks, component
+import fabfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCKER_ROOT = os.path.join(ROOT, 'docker')
@@ -148,10 +148,11 @@ class DockerImageMixin(object):
         wait(docker_client.build(path=self.dockerpath, tag=self.image_name, rm=True))
         return self
 
-    def destroy(self):
-        print("Removing image '{}'".format(self.image_name))
+    def destroy(self, image_name=None):
+        image_name = image_name or self.image_name
+        print("Removing image '{}'".format(image_name))
         try:
-            docker_client.remove_image(image=self.image_name)
+            docker_client.remove_image(image=image_name)
         except docker.errors.APIError:
             print("  image not found")
         return self
@@ -193,10 +194,10 @@ class DockerImageMixin(object):
             self.container = None
         return self
 
-    def commit(self, repo=None):
-        if not repo:
-            repo = self.image_name + '_' + self.short_container_name
-        docker_client.commit(self.container_name, repo)
+    def commit(self, image_name=None):
+        if not image_name:
+            image_name = self.image_name + '_' + self.short_container_name
+        docker_client.commit(self.container_name, image_name)
         return self
 
     def run(self, cmd, sudo=False):
@@ -235,8 +236,13 @@ class FabricDeployMixin(object):
         :param cmd: the fabric command
         :param let: dictionary with optional api.env variables
         """
-        command = getattr(tasks, cmd, None) or getattr(component, cmd, None)
-        if not command:
+        if '.' in cmd:
+            command = fabfile
+            for compo in cmd.split('.'):
+                command = getattr(command, compo, command)
+        else:
+            command = getattr(fabfile.tasks, cmd, None)
+        if not isinstance(command, tasks.WrappedCallableTask):
             raise RuntimeError("Unknown Fabric command %s" % cmd)
         with context_managers.settings(context_managers.hide('stdout'), **let):
             api.execute(command)

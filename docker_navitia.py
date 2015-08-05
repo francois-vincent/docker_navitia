@@ -236,6 +236,11 @@ class FabricDeployMixin(object):
         :param cmd: the fabric command
         :param let: dictionary with optional api.env variables
         """
+        if ':' in cmd:
+            cmd, args = cmd.split(':', 1)
+            args = args.split(',')
+        else:
+            args = ()
         if '.' in cmd:
             command = fabfile
             for compo in cmd.split('.'):
@@ -245,7 +250,7 @@ class FabricDeployMixin(object):
         if not isinstance(command, tasks.WrappedCallableTask):
             raise RuntimeError("Unknown Fabric command %s" % cmd)
         with context_managers.settings(context_managers.hide('stdout'), **let):
-            api.execute(command)
+            api.execute(command, *args)
         return self
 
 

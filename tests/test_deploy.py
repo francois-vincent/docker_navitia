@@ -276,7 +276,4 @@ class TestDeploy(object):
         n = self.deploy_simple()
         n.stop().start()
         time.sleep(3)
-        try:
-            n.execute('component.kraken.test_these_krakens:{}'.format(n.get_host()))
-        finally:
-            n.stop()
+        n.execute('component.kraken.test_all_krakens', wait=True)

@@ -230,17 +230,15 @@ class FabricDeployMixin(object):
             getattr(module, self.platform)(host_ref)
         return self
 
-    def execute(self, cmd='deploy_from_scratch', let={}):
+    def execute(self, cmd='deploy_from_scratch', *args, **kwargs):
         """
-        Execute a fabric-navitia command, with optional api.env variables
+        Executes a fabric-navitia command
         :param cmd: the fabric command
-        :param let: dictionary with optional api.env variables
+        :param *args are passed to api.execute
+        :param **kwargs are passed to api.execute, except 'let' which is
+               passed to settings
         """
-        if ':' in cmd:
-            cmd, args = cmd.split(':', 1)
-            args = args.split(',')
-        else:
-            args = ()
+        let = kwargs.pop('let', {})
         if '.' in cmd:
             command = fabfile
             for compo in cmd.split('.'):
@@ -250,7 +248,7 @@ class FabricDeployMixin(object):
         if not isinstance(command, tasks.WrappedCallableTask):
             raise RuntimeError("Unknown Fabric command %s" % cmd)
         with context_managers.settings(context_managers.hide('stdout'), **let):
-            api.execute(command, *args)
+            api.execute(command, *args, **kwargs)
         return self
 
 

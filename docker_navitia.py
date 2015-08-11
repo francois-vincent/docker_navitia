@@ -19,7 +19,8 @@ DOCKER_ROOT = os.path.join(ROOT, 'docker')
 SSH_KEY_FILE = os.path.join(ROOT, 'platforms', 'unsecure_key.pub')
 PLATFORMS = 'platforms'
 
-docker_client = docker.Client(base_url='unix://var/run/docker.sock')
+# version='auto' is better if you wish to use different docker API versions
+docker_client = docker.Client(base_url='unix://var/run/docker.sock', version='auto')
 
 IMAGE_PREFIX = 'navitia/'
 CONTAINER_PREFIX = 'navitia_'
@@ -88,10 +89,15 @@ class DockerImageMixin(object):
         if volumes:
             binds = {}
             for vol in volumes:
-                host, guest = vol.split(':')
+                host, guest = vol.split(':', 1)
+                # default mode is 'ro', you can specify 'rw'
+                if ':' in guest:
+                    guest, mode = guest.split(':')
+                else:
+                    mode = 'ro'
                 host = os.path.expanduser(host)
                 self.volumes.append(guest)
-                binds[host] = {'bind': guest, 'ro': False}
+                binds[host] = {'bind': guest, 'mode': mode}
             kwargs['binds'] = binds
         ports = options.get('ports')
         self.ports = []
@@ -102,8 +108,9 @@ class DockerImageMixin(object):
                     if ':' in port:
                         # TODO does not accept format host_ip:host_port:guest_port yet
                         host, guest = port.rsplit(':', 1)
-                        port_bindings[int(guest)] = int(host)
-                        self.ports.append(port)
+                        guest = int(guest)
+                        port_bindings[guest] = int(host)
+                        self.ports.append(guest)
                     elif '-' in port:
                         start, end = port.split('-')
                         for p in xrange(int(start), int(end) + 1):

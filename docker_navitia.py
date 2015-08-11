@@ -90,11 +90,11 @@ class DockerImageMixin(object):
             binds = {}
             for vol in volumes:
                 host, guest = vol.split(':', 1)
-                # default mode is 'ro', you can specify 'rw'
+                # default mode is 'rw', you can specify 'ro' instead
                 if ':' in guest:
                     guest, mode = guest.split(':')
                 else:
-                    mode = 'ro'
+                    mode = 'rw'
                 host = os.path.expanduser(host)
                 self.volumes.append(guest)
                 binds[host] = {'bind': guest, 'mode': mode}

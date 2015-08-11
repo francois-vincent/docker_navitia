@@ -19,6 +19,7 @@ DOCKER_ROOT = os.path.join(ROOT, 'docker')
 SSH_KEY_FILE = os.path.join(ROOT, 'platforms', 'unsecure_key.pub')
 PLATFORMS = 'platforms'
 
+# version='auto' is better if you wish to use different docker API versions
 docker_client = docker.Client(base_url='unix://var/run/docker.sock', version='auto')
 
 IMAGE_PREFIX = 'navitia/'

@@ -158,7 +158,7 @@ class DockerImageMixin(object):
         return self
 
     def create(self):
-        kwargs = dict(image=self.image_name, name=self.container_name)
+        kwargs = dict(image=self.image_name, name=self.container_name, hostname=self.host)
         if self.volumes or self.ports:
             kwargs['host_config'] = self.host_config
             if self.ports:
@@ -254,7 +254,8 @@ class FabricDeployMixin(object):
 
 class BuildDockerSimple(DockerImageMixin, FabricDeployMixin):
 
-    def __init__(self, distrib='debian8', platform='simple', image=None, container=None, **options):
+    def __init__(self, distrib='debian8', platform='simple', image=None, container=None, host=None, **options):
+        self.host = host or platform
         self.distrib = distrib
         self.platform = platform
         self.set_path(os.path.join(DOCKER_ROOT, distrib))
@@ -278,6 +279,7 @@ class BuildDockerSimple(DockerImageMixin, FabricDeployMixin):
 class DockerImage(DockerImageMixin):
 
     def __init__(self, name, distrib, platform, **options):
+        self.host = name
         self.container_name = CONTAINER_PREFIX + platform + '_' + name
         self.short_container_name = platform
         self.image_name = IMAGE_PREFIX + distrib + '_' + name

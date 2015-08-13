@@ -4,34 +4,34 @@ import pytest
 
 
 def pytest_addoption(parser):
-    parser.addoption("--nobuild", action="store_true", default=False,
-        help="do not build container but fabric it")
-    parser.addoption("--nofabric", action="store_true", default=False,
-        help="do not build container but create it")
-    parser.addoption("--nocreate", action="store_true", default=False,
-        help="do not build nor create container, restart it via fabric")
-    parser.addoption("--norestart", action="store_true", default=False,
-        help="do not build nor create container, just start it")
+    parser.addoption("--build", action="store_true", default=False,
+                     help="build image")
+    parser.addoption("--fabric", action="store_true", default=False,
+                     help="apply fabric's task deploy_from_scratch")
+    parser.addoption("--create", action="store_true", default=False,
+                     help="create container from image")
     parser.addoption("--commit", action="store_true", default=False,
-        help="commit containers")
+                     help="commit container")
+    parser.addoption("--restart", action="store_true", default=False,
+                     help="restart container")
 
 
 @pytest.fixture
-def nobuild(request):
-    return request.config.getoption("--nobuild")
+def build(request):
+    return request.config.getoption("--build")
 
 @pytest.fixture
-def nofabric(request):
-    return request.config.getoption("--nofabric")
+def fabric(request):
+    return request.config.getoption("--fabric")
 
 @pytest.fixture
-def nocreate(request):
-    return request.config.getoption("--nocreate")
-
-@pytest.fixture
-def norestart(request):
-    return request.config.getoption("--norestart")
+def create(request):
+    return request.config.getoption("--create")
 
 @pytest.fixture
 def commit(request):
     return request.config.getoption("--commit")
+
+@pytest.fixture
+def restart(request):
+    return request.config.getoption("--restart")

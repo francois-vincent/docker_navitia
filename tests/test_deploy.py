@@ -189,28 +189,31 @@ class TestDeploy(object):
         if commit:
             n.stop().commit()
 
-    def test_deploy_composed(self, nobuild, nocreate, norestart):
+    def test_deploy_composed(self, build, create, fabric_restart, restart):
         n = self.deploy_composed()
         assert n.images['tyr'].image_name == 'navitia/debian8_tyr'
         assert n.images['tyr'].container_name == 'navitia_composed_tyr'
-        if norestart:
+        if restart:
             n.stop().start()
             time.sleep(10)
-        elif nocreate:
+        elif fabric_restart:
             n.stop().start()
             time.sleep(10)
             n.execute('restart_all')
             time.sleep(2)
-        elif nobuild:
+        elif create:
             n.stop().rm().up()
             n.set_platform().execute()
             time.sleep(2)
-        else:
+        elif build:
             n.stop().rm().destroy()
             n.build()
             n.up().set_platform()
             n.execute()
             time.sleep(2)
+        else:
+            print("\nPlease specify waht you want: --build, --fabric, --create, --commit or --restart")
+            return
         print(n.get_host())
         n.run('ps ax')
         # often, some processes are not launched, so we check them all
@@ -219,31 +222,36 @@ class TestDeploy(object):
         self.check_processes(n.output)
         assert requests.get('http://%s/navitia' % n.images['jormun'].inspect()).status_code == 200
 
-    def test_deploy_simple(self, nobuild, nofabric, nocreate, commit):
+    def test_deploy_simple(self, build, fabric, create, commit, restart):
         n = self.deploy_simple()
-        if commit:
-            print('Committing image')
-            n.destroy(n.image_name + '_' + n.short_container_name)
-            n.start().clean_image().stop().commit()
-            return
-        elif nocreate:
-            print('Starting image, no create')
+        if restart:
+            print('\nRestart container')
             n.stop().start()
-        elif nofabric:
-            print('Creating container, no build')
+        elif commit:
+            print('\nCommitting image')
+            n.destroy(n.image_name + '_' + n.short_container_name)
+            n.start()
+            time.sleep(3)
+            n.clean_image().stop().commit()
+            return
+        elif create:
+            print('\nCreating container from image')
             # n.image_name += '_simple'
             n.stop().remove().create().start()
             return
-        elif nobuild:
-            print('Creating image via fabric, no build')
+        elif fabric:
+            print('\nCreating image via fabric')
             n.stop().start()
             time.sleep(3)
             n.execute()
             n.run('chmod a+wr /var/log/tyr/default.log', sudo=True)
-        else:
-            print('Building image')
+        elif build:
+            print('\nBuilding image')
             n.stop().remove().destroy()
             n.build()
+            return
+        else:
+            print("\nPlease specify waht you want: --build, --fabric, --create, --commit or --restart")
             return
         print(n.get_host())
         # we have to wait a while for tyr_beat to establish the connection

@@ -18,6 +18,9 @@ RUN apt-get install -y apache2 libapache2-mod-wsgi
 RUN apt-get install -y  postgresql-server-dev-all postgis
 RUN apt-get install -y redis-server rabbitmq-server
 
+# fix apache2 configuration bug
+RUN sed -i "s!DocumentRoot /var/www/html!DocumentRoot /var/www!g" /etc/apache2/sites-available/000-default.conf
+
 # change redis-server conf for not daemonize (for supervisord)
 RUN sed -i '/^daemonize yes/c\daemonize no' /etc/redis/redis.conf
 
@@ -30,7 +33,7 @@ RUN echo "navitia ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 RUN mkdir /var/run/sshd
 RUN mkdir -p /home/navitia/.ssh
 # SSH login fix. Otherwise user is kicked off after login
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+RUN sed -i 's!session\s*required\s*pam_loginuid.so!session optional pam_loginuid.so!g' /etc/pam.d/sshd
 COPY unsecure_key.pub /home/navitia/.ssh/authorized_keys
 RUN chmod 644 /home/navitia/.ssh/authorized_keys
 

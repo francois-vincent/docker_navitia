@@ -9,8 +9,6 @@ RUN mkdir -m 777 -p $DATA_VOLUME
 RUN touch $DATA_VOLUME/placeholder
 VOLUME ["$DATA_VOLUME"]
 
-RUN echo "export CONTAINER=DOCKER" >> /etc/profile
-
 # systemd is removed and sysvinit is installed instead.
 # As of may 2015, systemd is difficult to launch in a docker container, see http://developerblog.redhat.com/2014/05/05/running-systemd-within-docker-container/
 # and if systemd is installed, some packages try to launch via systemctl (eg PostgreSQL) and fail
@@ -27,7 +25,6 @@ RUN sed -i '/^daemonize yes/c\daemonize no' /etc/redis/redis.conf
 RUN useradd -m -s /bin/bash navitia && echo "navitia:navitia" | chpasswd
 RUN adduser navitia sudo && adduser navitia www-data
 RUN echo "navitia ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-RUN echo "export PS1='\u@NAVITIA:\w$ '" >> /home/navitia/.bashrc
 
 # configure SSH server
 RUN mkdir /var/run/sshd

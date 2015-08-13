@@ -8,11 +8,11 @@ import shutil
 import sys
 
 import docker
-from fabric import api, context_managers, operations
+from fabric import api, context_managers, operations, tasks
 
 # generally, fabric-navitia is a brother folder, if not, set environment variable PYTHONPATH
 sys.path.insert(1, os.path.abspath(os.path.join(__file__, '..', '..', 'fabric_navitia')))
-from fabfile import tasks, component
+import fabfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCKER_ROOT = os.path.join(ROOT, 'docker')
@@ -90,11 +90,11 @@ class DockerImageMixin(object):
             binds = {}
             for vol in volumes:
                 host, guest = vol.split(':', 1)
-                # default mode is 'ro', you can specify 'rw'
+                # default mode is 'rw', you can specify 'ro' instead
                 if ':' in guest:
                     guest, mode = guest.split(':')
                 else:
-                    mode = 'ro'
+                    mode = 'rw'
                 host = os.path.expanduser(host)
                 self.volumes.append(guest)
                 binds[host] = {'bind': guest, 'mode': mode}
@@ -148,16 +148,17 @@ class DockerImageMixin(object):
         wait(docker_client.build(path=self.dockerpath, tag=self.image_name, rm=True))
         return self
 
-    def destroy(self):
-        print("Removing image '{}'".format(self.image_name))
+    def destroy(self, image_name=None):
+        image_name = image_name or self.image_name
+        print("Removing image '{}'".format(image_name))
         try:
-            docker_client.remove_image(image=self.image_name)
+            docker_client.remove_image(image=image_name)
         except docker.errors.APIError:
             print("  image not found")
         return self
 
     def create(self):
-        kwargs = dict(image=self.image_name, name=self.container_name)
+        kwargs = dict(image=self.image_name, name=self.container_name, hostname=self.host)
         if self.volumes or self.ports:
             kwargs['host_config'] = self.host_config
             if self.ports:
@@ -193,10 +194,10 @@ class DockerImageMixin(object):
             self.container = None
         return self
 
-    def commit(self, repo=None):
-        if not repo:
-            repo = self.image_name + '_' + self.short_container_name
-        docker_client.commit(self.container_name, repo)
+    def commit(self, image_name=None):
+        if not image_name:
+            image_name = self.image_name + '_' + self.short_container_name
+        docker_client.commit(self.container_name, image_name)
         return self
 
     def run(self, cmd, sudo=False):
@@ -229,23 +230,32 @@ class FabricDeployMixin(object):
             getattr(module, self.platform)(host_ref)
         return self
 
-    def execute(self, cmd='deploy_from_scratch', let={}):
+    def execute(self, cmd='deploy_from_scratch', *args, **kwargs):
         """
-        Execute a fabric-navitia command, with optional api.env variables
+        Executes a fabric-navitia command
         :param cmd: the fabric command
-        :param let: dictionary with optional api.env variables
+        :param *args are passed to api.execute
+        :param **kwargs are passed to api.execute, except 'let' which is
+               passed to settings
         """
-        command = getattr(tasks, cmd, None) or getattr(component, cmd, None)
-        if not command:
+        let = kwargs.pop('let', {})
+        if '.' in cmd:
+            command = fabfile
+            for compo in cmd.split('.'):
+                command = getattr(command, compo, command)
+        else:
+            command = getattr(fabfile.tasks, cmd, None)
+        if not isinstance(command, tasks.WrappedCallableTask):
             raise RuntimeError("Unknown Fabric command %s" % cmd)
         with context_managers.settings(context_managers.hide('stdout'), **let):
-            api.execute(command)
+            api.execute(command, *args, **kwargs)
         return self
 
 
 class BuildDockerSimple(DockerImageMixin, FabricDeployMixin):
 
-    def __init__(self, distrib='debian8', platform='simple', image=None, container=None, **options):
+    def __init__(self, distrib='debian8', platform='simple', image=None, container=None, host=None, **options):
+        self.host = host or platform
         self.distrib = distrib
         self.platform = platform
         self.set_path(os.path.join(DOCKER_ROOT, distrib))
@@ -269,6 +279,7 @@ class BuildDockerSimple(DockerImageMixin, FabricDeployMixin):
 class DockerImage(DockerImageMixin):
 
     def __init__(self, name, distrib, platform, **options):
+        self.host = name
         self.container_name = CONTAINER_PREFIX + platform + '_' + name
         self.short_container_name = platform
         self.image_name = IMAGE_PREFIX + distrib + '_' + name

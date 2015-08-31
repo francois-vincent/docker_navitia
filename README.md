@@ -68,7 +68,24 @@ You can check existing Navitia images on docker hub, type `docker search navitia
 You can dowload a docker image: `docker pull navitia/debian8_simple`.
 
 Once a Navitia image has been commited or pulled, you can run it. The detailed command must define at least the data volume mapping:
-`docker run -p 8080:80 -v {host data directory}:/srv/ed/data --name navitia_simple navitia/debian8_simple`
+`docker run -d -p 8080:80 -v {host data directory}:/srv/ed/data --name navitia_simple navitia/debian8_simple`
+
+Before running Navitia image, you must create and prepare your data directory:
+`mkdir -m 777 -p {host data directory}`.
+This directory will contain a single instance named 'default':
+` cd {host data directory} && mkdir -m 777 default`.
+
+After Navitia image has been launched, you can test it: Drop a data.zip file inside the 'default' directory
+and watch it being replaced by a data.nav.lz4 file.
+
+## Stepping inside
+You can ssh to a running container, you need first to get it's IP: `docker inspect --format '{{ .NetworkSettings.IPAddress }}' navitia_simple`.
+Then run ssh client: `ssh navitia@172.17.xx.xx`. Password is equal to username.
+
+Another way to step inside a running image is the 'exec' docker command:
+`docker exec -it navitia_simple /bin/bash`.
+You can also use the 'exec' docker command to run anything useful on your running image:
+e.g. `docker exec -it navitia_simple tail -f /var/log/tyr/tyr.log`
 
 ## Limitations
 The current version of this project only allows for one instance of Navitia (simple or composed) to run

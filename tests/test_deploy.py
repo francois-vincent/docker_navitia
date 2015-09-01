@@ -232,7 +232,7 @@ class TestDeploy(object):
             n.destroy(n.image_name + '_' + n.short_container_name)
             n.start()
             time.sleep(3)
-            n.clean_image().stop().commit()
+            n.clean_image().stop().commit(tag=True)
             return
         elif create:
             print('\nCreating container from image')

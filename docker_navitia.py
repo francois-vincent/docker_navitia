@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 from __future__ import unicode_literals, print_function
+import glob
 from importlib import import_module
 from jinja2 import Environment, FileSystemLoader
 import os
@@ -194,10 +195,17 @@ class DockerImageMixin(object):
             self.container = None
         return self
 
-    def commit(self, image_name=None):
+    def commit(self, image_name=None, tag=None):
         if not image_name:
             image_name = self.image_name + '_' + self.short_container_name
-        docker_client.commit(self.container_name, image_name)
+        if tag:
+            try:
+                tag = glob.glob('navitia-kraken_*.deb')[0].split('_')[1]
+            except Exception:
+                tag = 'latest'
+            docker_client.commit(self.container_name, image_name, tag)
+        else:
+            docker_client.commit(self.container_name, image_name)
         return self
 
     def run(self, cmd, sudo=False):
